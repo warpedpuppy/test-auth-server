@@ -4,57 +4,82 @@
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
     <title>Test Auth Server</title>
-    <style>
-      #container {
-        max-width: 500px;
-      }
-
-      h4 {
-        margin-top: 25px;
-      }
-    </style>
+    <link href="./styles.css" rel="stylesheet" />
   </head>
 
   <body>
     <main id="container">
       <h1>OAuth2 Test</h1>
-      <h4><b>Step 1:</b> Get the OAuth URL</h4>
-      <p>Click the button below to get your OAuth URL.</p>
-      <button id="getURL">Get OAuth URL</button>
-      <p id="result"></p>
-      <a id="authURL" href="#" target="_blank">Click to authorize</a>
+
+      <!-- STEP 1 -->
+      <fieldset>
+        <legend><h4>step 1: Get the OAuth URL</h4></legend>
+        <p>Click the button below to get your OAuth URL.</p>
+        <button id="get_url_button">Get OAuth URL</button>
+        <div id="auth_url_result_parent" class="results-box">
+          <h4>auth&nbsp;url:</h4>
+          <div id="auth_url_result_div"></div>
+        </div>
+      </fieldset>
+
       <!-- STEP 2: MAKE SURE STEP 1 WORKS BEFORE MOVING ON-->
+      <fieldset>
+        <legend>
+          <h4>step 2: Get your code and exchange for an access token</h4>
+        </legend>
+        <a id="authURL" href="#" target="_blank"
+          >click to open new window from which you'll grab the code url
+          variable.</a
+        >
+        <p>
+          After you&apos;re redirected back to your Meet app on GitHub, copy the
+          code from the URI.
+        </p>
+        <br />
+        <label
+          >Code input
+          <input id="code" type="text" value="" />
+        </label>
+        <button id="getToken">Get Token</button>
+        <p id="accessToken"></p>
+        <div id="access_token_result_parent" class="results-box">
+          <h4>access token:</h4>
+          <div id="access_token_result_div"></div>
+        </div>
+      </fieldset>
 
-      <h4>Step 2: Get your code and exchange for an access token</h4>
-      <p>
-        After you&apos;re redirected back to your Meet app on GitHub, copy the
-        code from the URI.
-      </p>
-      <br />
-      <label
-        >Code input
-        <input id="code" type="text" value="" />
-      </label>
-      <button id="getToken">Get Token</button>
-      <p id="accessToken"></p>
+      <!-- STEP 3 -->
+      <fieldset>
+        <legend>
+          <h4>Step 3: Get the calendar events using your access token</h4>
+        </legend>
+        <!-- STEP 3: MAKE SURE STEP 3 WORKS BEFORE MOVING ON-->
 
-      <!-- STEP 3: MAKE SURE STEP 3 WORKS BEFORE MOVING ON-->
-      <h4>Step 3: Get the calendar events using your access token</h4>
-      <button id="getEvents">Get Events</button>
-      <p id="events"></p>
+        <button id="getEvents">Get Events</button>
+        <p id="events"></p>
+      </fieldset>
     </main>
     <script>
       // --------------------- STEP 1
-      const getURLElement = document.getElementById("getURL");
-      const resultElement = document.getElementById("result");
+      const get_url_button = document.getElementById("get_url_button");
+      const step1explanationText = document.querySelector(
+        "fieldset:nth-of-type(1) p"
+      );
+      const auth_url_result_div = document.getElementById(
+        "auth_url_result_div"
+      );
+      const auth_url_result_parent = document.getElementById(
+        "auth_url_result_parent"
+      );
       const resultLink = document.getElementById("authURL");
+
+      const step2Fieldset = document.querySelector("fieldset:nth-of-type(2)");
       // Replace this with your own endpoint
       const getAuthURL =
         "https://gq6zqys431.execute-api.us-east-1.amazonaws.com/dev/api/get-auth-url";
 
-      getURLElement.onclick = function () {
+      get_url_button.onclick = function () {
         fetch(getAuthURL)
           .then(function (response) {
             return response.json();
@@ -63,11 +88,26 @@
             const result = JSON.stringify(json);
             // we get the value of authUrl
             const { authUrl } = JSON.parse(result);
-            // then add it to the html
-            resultElement.innerText = result;
-            resultLink.href = authUrl;
+
+            auth_url_result_div.innerText = result;
+
+            hideCompletedStepOneSections();
+            displayAuthURL(authUrl);
+            showStep2();
           });
       };
+
+      function hideCompletedStepOneSections() {
+        get_url_button.style.display = "none";
+        step1explanationText.style.display = "none";
+      }
+      function displayAuthURL(authUrl) {
+        auth_url_result_parent.style.display = "flex";
+        resultLink.href = authUrl;
+      }
+      function showStep2() {
+        step2Fieldset.classList.add("show");
+      }
       // --------------------- END OF STEP 1
 
       // --------------------- STEP 2
@@ -76,6 +116,7 @@
       const accessTokenElement = document.getElementById("accessToken");
       const getToken =
         "https://gq6zqys431.execute-api.us-east-1.amazonaws.com/dev/api/token";
+      const step3Fieldset = document.querySelector("fieldset:nth-of-type(3)");
 
       getAccessToken.onclick = function () {
         let code = codeValue.value;
@@ -85,14 +126,13 @@
           code = encodeURIComponent(codeValue.value);
         }
         const getTokenRequest = getToken + "/" + code;
-        console.log("code", code);
         fetch(getTokenRequest)
           .then(function (response) {
             return response.json();
           })
           .then(function (json) {
-            console.log(json);
             accessTokenElement.innerText = JSON.stringify(json);
+            step3Fieldset.classList.add("show");
           })
           .catch((e) => console.error(e));
       };
